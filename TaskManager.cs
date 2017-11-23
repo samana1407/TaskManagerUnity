@@ -35,6 +35,25 @@ namespace Samana.Tasks
         }
 
         /// <summary>
+        /// Добавляет очередь в менеджер, если она ещё не добавлена и имеет уникальное имя.
+        /// </summary>
+        /// <param name="queue"></param>
+        /// <returns></returns>
+        public TaskQueue addQueue(TaskQueue queue)
+        {
+            for (int i = 0; i < _queues.Count; i++)
+            {
+                if (_queues[i] == queue || _queues[i].name == queue.name)
+                {
+                    Debug.LogWarningFormat("[TaskManager][addQueue] Очередь с именем '{0}' уже добавлена. Отмена.", queue.name);
+                    return null;
+                }
+            }
+            _queues.Add(queue);
+            return queue;
+        }
+
+        /// <summary>
         /// Удаляет очередь заданий.
         /// </summary>
         /// <param name="queueName">Имя очереди, которую надо удалить.</param>
@@ -92,12 +111,11 @@ namespace Samana.Tasks
 
     public class TaskQueue
     {
-        public string name;
+        public string name { get; private set; }
         List<Task> _tasks;
         public Task[] tasks { get { return _tasks.ToArray(); } }
         public bool isEmpty { get { return _tasks.Count == 0; } }
-
-
+        public bool pause;
 
         public bool canBeRemoved;
 
@@ -201,6 +219,7 @@ namespace Samana.Tasks
         /// <param name="deltaTime">Время для работы таймеров заданий.</param>
         public void Invoke(float deltaTime)
         {
+            if (pause) return;
             if (_tasks.Count != 0)
             {
                 _tasks[0].invoke(deltaTime);
@@ -212,8 +231,6 @@ namespace Samana.Tasks
 
     }
 
-    //TODO Добавить зацикленность для тасков, например чтобы запускать метод постоянно через интервал, либо 
-    //определённое кол-во раз
     public class Task
     {
         private Func<bool> _taskFunc;
@@ -267,7 +284,7 @@ namespace Samana.Tasks
                     _repeat++;
                     resetTimers();
                 }
-                
+
             }
         }
 
