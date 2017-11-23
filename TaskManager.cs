@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Samana.Tasks
 {
-    //TODO Добавить зацикленность для тасков, например чтобы запускать метод постоянно через интервал, либо 
-    //определённое кол-во раз
     public class TaskManager : MonoBehaviour
     {
         public static TaskManager instance;
@@ -97,10 +95,9 @@ namespace Samana.Tasks
         public string name;
         List<Task> _tasks;
         public Task[] tasks { get { return _tasks.ToArray(); } }
-        public bool isEmpty
-        {
-            get { return _tasks.Count == 0; }
-        }
+        public bool isEmpty { get { return _tasks.Count == 0; } }
+
+
 
         public bool canBeRemoved;
 
@@ -189,6 +186,16 @@ namespace Samana.Tasks
         }
 
         /// <summary>
+        ///  Очищает очередь.
+        /// </summary>
+        /// <returns></returns>
+        public TaskQueue clear()
+        {
+            _tasks.Clear();
+            return this;
+        }
+
+        /// <summary>
         /// Вызывает текущее задание.
         /// </summary>
         /// <param name="deltaTime">Время для работы таймеров заданий.</param>
@@ -197,12 +204,16 @@ namespace Samana.Tasks
             if (_tasks.Count != 0)
             {
                 _tasks[0].invoke(deltaTime);
+
+                if (isEmpty) return; // возможно таск выше вызвал очистку очереди
                 if (_tasks[0].isDone) _tasks.RemoveAt(0);
             }
         }
 
     }
 
+    //TODO Добавить зацикленность для тасков, например чтобы запускать метод постоянно через интервал, либо 
+    //определённое кол-во раз
     public class Task
     {
         private Func<bool> _taskFunc;
