@@ -225,6 +225,9 @@ namespace Samana.Tasks
         public float breakTime;
         private float _breakTime;
 
+        public int repeat = 0;
+        private int _repeat;
+
         public Action endCallback;
         public bool isDone { get; private set; }
 
@@ -258,15 +261,22 @@ namespace Samana.Tasks
                 }
 
                 if (isDone && endCallback != null) endCallback();
+
+                if (isDone && repeat > 0 && _repeat < repeat - 1)
+                {
+                    _repeat++;
+                    resetTimers();
+                }
+                
             }
         }
 
-        //public void resetTimers()
-        //{
-        //    _delay = 0;
-        //    _breakTime = 0;
-        //    isDone = false;
-        //}
+        private void resetTimers()
+        {
+            _delay = 0;
+            _breakTime = 0;
+            isDone = false;
+        }
 
         /// <summary>
         /// Создаёт и возвращает клон этого задания со сброщенными приватными таймерами.
@@ -275,9 +285,9 @@ namespace Samana.Tasks
         public Task cloneWithResetTimers()
         {
             if (_taskFunc != null)
-                return new Task(_taskFunc) { delay = this.delay, breakTime = this.breakTime, endCallback = this.endCallback };
+                return new Task(_taskFunc) { delay = this.delay, breakTime = this.breakTime, endCallback = this.endCallback, repeat = repeat };
             else
-                return new Task(_taskAction) { delay = this.delay, breakTime = this.breakTime, endCallback = this.endCallback };
+                return new Task(_taskAction) { delay = this.delay, breakTime = this.breakTime, endCallback = this.endCallback, repeat = repeat };
         }
     }
 
