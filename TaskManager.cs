@@ -179,6 +179,16 @@ namespace Samana.Tasks
         }
 
         /// <summary>
+        /// Удаляет из очереди все задания после текущего.
+        /// </summary>
+        /// <returns></returns>
+        public TaskQueue removeTasksAfterCurrent()
+        {
+            if (_tasks.Count > 1) _tasks.RemoveRange(1, _tasks.Count - 1);
+            return this;
+        }
+
+        /// <summary>
         /// Вызывает текущее задание.
         /// </summary>
         /// <param name="deltaTime">Время для работы таймеров заданий.</param>
@@ -259,6 +269,10 @@ namespace Samana.Tasks
                 return new Task(_taskAction) { delay = this.delay, breakTime = this.breakTime, endCallback = this.endCallback };
         }
     }
+
 }
+
+
+
 
 
