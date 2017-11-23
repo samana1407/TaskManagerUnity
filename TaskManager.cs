@@ -11,10 +11,14 @@ namespace Samana.Tasks
         public bool pause;
 
         List<TaskQueue> _queues;
+        List<TaskQueue> _queuesForRemove;
+        bool _isUpdate;
+
         private void Awake()
         {
             instance = this;
             _queues = new List<TaskQueue>();
+            _queuesForRemove = new List<TaskQueue>();
         }
 
         /// <summary>
@@ -63,8 +67,13 @@ namespace Samana.Tasks
             {
                 if (_queues[i].name == queueName)
                 {
-                    if (pause) _queues.RemoveAt(i);
-                    else _queues[i].canBeRemoved = true;
+                    if (pause || !_isUpdate) _queues.RemoveAt(i);
+                    else
+                    {
+                        // нужно для того, если поступила команда на удаление очереди во время её выполнения,
+                        // такая очередь удалится только после своей отработки.
+                        if (!_queuesForRemove.Contains(_queues[i])) _queuesForRemove.Add(_queues[i]);
+                    }
 
                     break;
                 }
@@ -85,27 +94,26 @@ namespace Samana.Tasks
         private void Update()
         {
             if (pause) return;
+            _isUpdate = true;
 
             float deltaTime = Time.deltaTime;
 
             TaskQueue currentQueue;
             for (int i = 0; i < _queues.Count; i++)
             {
-                if (_queues[i].canBeRemoved)
-                {
-                    _queues.RemoveAt(i);
-                    i--;
-                    continue;
-                }
+                if (_queuesForRemove.Contains(_queues[i])) continue; //если очередь в списке "надо удалить", то проходим мимо
 
                 currentQueue = _queues[i];
                 currentQueue.Invoke(deltaTime);
-                //if (currentQueue.isEmpty)
-                //{
-                //    _queues.RemoveAt(i);
-                //    i--;
-                //}
             }
+
+            if (_queuesForRemove.Count != 0) // удаляем все очереди из списка "надо удалить"
+            {
+                for (int i = 0; i < _queuesForRemove.Count; i++) _queues.Remove(_queuesForRemove[i]);
+                _queuesForRemove.Clear();
+            }
+
+            _isUpdate = false;
         }
     }
 
@@ -116,8 +124,6 @@ namespace Samana.Tasks
         public Task[] tasks { get { return _tasks.ToArray(); } }
         public bool isEmpty { get { return _tasks.Count == 0; } }
         public bool pause;
-
-        public bool canBeRemoved;
 
         public TaskQueue(string queueName)
         {
